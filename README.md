@@ -8,14 +8,14 @@ Ultimement, cela se traduit en l’automatisation de la prise de mesure des temp
 ## Comment suivre nos travaux
 Comme il s'agit d'un projet comportant plusieurs composantes, un issue est généré pour chaque aspect de la problématique à résoudre. Cela permet de ne pas perdre d'informations en ajoutant des commentaires à un seul issue. Nous vous invitons donc à consulter ces derniers afin de suivre l'avancement du développement de notre solution. La liste ci-dessous vous permet d'accéder facilement aux issues correspondant aux problématiques clés du projet : 
 
-[Température et humidité de la salle IRM](GBM8970IRM/ProjetIRM-UNG/issues/1)
+[Température et humidité de la salle IRM](/../../issues/1)
 
-[Température de l'eau du chiller](GBM8970IRM/ProjetIRM-UNG/issues/2)
+[Température de l'eau du chiller](/../../issues/2)
 
-[Débit de l'eau du chiller](GBM8970IRM/ProjetIRM-UNG/issues/3)
+[Débit de l'eau du chiller](/../../issues/3)
 
-[Stockage des données](GBM8970IRM/ProjetIRM-UNG/issues/4)
+[Stockage des données](/../../issues/4)
 
-[Interface de monitoring](GBM8970IRM/ProjetIRM-UNG/issues/5)
+[Interface de monitoring](/../../issues/5)
 
-[Alertes](GBM8970IRM/ProjetIRM-UNG/issues/6)
+[Alertes](/../../issues/6)
