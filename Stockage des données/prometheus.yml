@@ -1,0 +1,23 @@
+#On configure des valeurs globales
+global:
+  scrape_interval: 15s # La durée entre chaque scrape est configurée à 15 secondes (par défaut on parle d'une minute.)
+  evaluation_interval: 15s # les règles sont évalué à chaque 15 s
+  # scrape_timeout est laissé à la valeur par défaut de 10s 
+
+# Alertmanager configuration
+#alerting: #tentative d'alerte à retravaillé
+ # alertmanagers:
+  #  - static_configs:
+   #     - targets:
+    #       - alertmanager:9093
+
+# Fichier de rules qui permet d'établir les règles de l'alarme. 
+#rule_files:
+#  - rules.yml
+#   - "second_rules.yml"
+scrape_configs: 
+
+  - job_name: 'temperature' #on scrape à toutes les 15 secondes la valeur dans le pushgateway
+    scrape_interval: 15s #Redondant avec la valeur globale je laisse quand même pour pouvoir le modifié en cas de besoin
+    static_configs:
+     - targets: ['localhost:9091']
