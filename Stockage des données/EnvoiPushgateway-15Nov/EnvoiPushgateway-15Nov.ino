@@ -22,7 +22,7 @@ float humIRM;
 
 int serverPort = 9091;  // Port du Pushgateway (Par défaut il s'agit de 9091)
 byte mac[] = { 0xA8, 0x61, 0xA, 0x50, 0x5A, 0xE7 };  // Adresse MAC de l'arduino (NE PAS MODIFIER)
-IPAddress server(10, 200, 39, 55);  // Adresse IP du Pushgateway (Sera celle du serveur)
+IPAddress server();  // Adresse IP du Pushgateway (Sera celle du serveur)
 
 EthernetClient client; //Connexion au serveur
 
