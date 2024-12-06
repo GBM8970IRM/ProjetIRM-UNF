@@ -36,7 +36,22 @@ Water Flow Rate
 Accepted Range = Min.: 90L/min
 Acquisition Frequency = 5 sec
 
-2. 
+1.3. Solution Structure
+Mid-project stage: Diagram is Functional and Only Slack Alerts and Flow Meter are Missing 
+
+
+2.    PROTOTYPE AND PRELIMINARY RESULTS
+2.1.Measurement of the Temperature and Humidity of the MRI Room
+Arduino Nano allows I2C Bus Communication
+Température et humidité salle IRM/Measurement of the Temperature_and_Humidity_of_the_MRI_Room_04-12-2024.png
+
+2.2. Measurement of Water Temperature at Inlet and Outlet of the Chiller 
+Arduino Opta collects all measurements and transmits them to the Prometheus server via a Pushgateway
+
+2.3. Interface on Grafana
+Modular, it Displays Results and History, updating them every 15 seconds
+
+
 
 3.    CHALLENGES
 Current Challenges and Areas for Improvement for Next Iteration
