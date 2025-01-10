@@ -1,21 +1,36 @@
 # GBM8970 Projet de monitoring de la salle IRM de l'INF
 
-## Mise en contexte
-Le projet de conception suivant a comme objectif de développer un appareil de mesure et de monitoring en temps réel pour la salle IRM de l’Unité de Neuroimagerie de Montréal. 
-Ce dernier est réalisé dans le cadre du cours GBM8970 - Projet intégrateur de Génie biomédical, par un groupe de cinq étudiants de quatrième année de baccalauréat en Génie biomédical. Les étudiants sont Louis-Antoine Delisle, Charlotte Pépin, William Sirois, Emmy Tran-Khanh et Héloïse Warin, sous la supervision du professeur Frédéric Lesage. Le produit final doit permettre de centraliser les différentes mesures afin de les afficher sur une interface qui contient toutes les informations récoltées et qui envoie des alertes lorsqu’une mesure anormale est détectée. 
-Ultimement, cela se traduit en l’automatisation de la prise de mesure des températures d’entrée et de sortie de l’eau du système de refroidissement, du débit de cette eau, ainsi que de la température et de l'humidité de la salle IRM. Les mesures collectées sont toutes envoyées dans un serveur web, à partir duquel elles sont par la suite affichées sur une interface graphique accessible par page web sur ordinateurs. 
+## Context
+The following design project aims to develop a real-time measurement and monitoring device for the MRI room of the Unité de Neuroimagerie de Montréal.
+This project is carried out as part of the course GBM8970 - Projet intégrateur de Génie biomédical, by a group of five fourth-year students in Biomedical Engineering. The students are Louis-Antoine Delisle, Charlotte Pépin, William Sirois, Emmy Tran-Khanh, and Héloïse Warin, under the supervision of Professor Frédéric Lesage. The final product should centralize various measurements and display them on an interface that contains all the collected information, sending alerts when an abnormal measurement is detected.
+Ultimately, this leads to the automation of measuring the inlet and outlet water temperatures of the cooling system of the MRI, its water flow rate, as well as the temperature and humidity of the MRI room. The collected measurements are all sent to a web server, from which they are subsequently displayed on a graphical interface accessible via a web page on computers. 
 
-## Comment suivre nos travaux
-Comme il s'agit d'un projet comportant plusieurs composantes, un issue est généré pour chaque aspect de la problématique à résoudre. Cela permet de ne pas perdre d'informations en ajoutant des commentaires à un seul issue. Nous vous invitons donc à consulter ces derniers afin de suivre l'avancement du développement de notre solution. La liste ci-dessous vous permet d'accéder facilement aux issues correspondant aux problématiques clés du projet : 
+## Neccessary equipment and parts
+The main parts that had to be aquired for this project are the following :
+- Arduino Opta for data acquisition and processing
+- Arduino Opta expansion (A0602) for reading current from flow meter
+- Casing with DIN rails
+- Fluid thermometer (x2)
+- Humidity and temperature sensor
+- Shield for the pre-existing flow meter
 
-[Température et humidité de la salle IRM](/../../issues/1)
+## PCB design
+The PCB was designed using KiCad. The following images show the circuit as well as the design of the PCB
+![PCB](https://github.com/user-attachments/assets/13883ed5-64b1-4ea5-8f7c-9cd0c883f697)
 
-[Température de l'eau du chiller](/../../issues/2)
+## How to use
 
-[Débit de l'eau du chiller](/../../issues/3)
+## How to follow our work
+Since this is a project with several components, an issue is generated for each aspect of the problem to be solved. This ensures that no information is lost by adding comments to a single issue. We invite you to consult these issues to follow the progress of the development of our solution. The list below allows you to easily access the issues corresponding to the key challenges of the project : 
 
-[Stockage des données](/../../issues/4)
+[Temperature and humidity of the MRI room](/../../issues/1)
 
-[Interface de monitoring](/../../issues/5)
+[Water temperature of the cooling system](/../../issues/2)
 
-[Alertes](/../../issues/6)
+[Flow rate of the cooling system](/../../issues/3)
+
+[Data storage](/../../issues/4)
+
+[Monitoring interface](/../../issues/5)
+
+[Alerts](/../../issues/6)
