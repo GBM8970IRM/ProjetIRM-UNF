@@ -9,16 +9,19 @@ Ultimately, this leads to the automation of measuring the inlet and outlet water
 The main parts that had to be aquired for this project are the following :
 - Arduino Opta for data acquisition and processing
 - Arduino Opta expansion (A0602) for reading current from flow meter
-- Casing with DIN rails
-- Fluid thermometer (x2)
+- Casing with DIN rails to house the different components
+- Fluid thermometer (x2) 
 - Humidity and temperature sensor
 - Shield for the pre-existing flow meter
 
-## PCB design
-The PCB was designed using KiCad. The following images show the circuit as well as the design of the PCB
+## Circuit and PCB design
+The PCB was designed using KiCad. The following images show the circuit schematic as well as the design of the PCB :
 ![PCB](https://github.com/user-attachments/assets/13883ed5-64b1-4ea5-8f7c-9cd0c883f697)
+**!Subject to change/Non official!**
 
 ## How to use
+Once the device is installed accordingly to the circuit schematic shown above, the aquired data can be accessed via Graffana.
+**To be completed.**
 
 ## How to follow our work
 Since this is a project with several components, an issue is generated for each aspect of the problem to be solved. This ensures that no information is lost by adding comments to a single issue. We invite you to consult these issues to follow the progress of the development of our solution. The list below allows you to easily access the issues corresponding to the key challenges of the project : 
