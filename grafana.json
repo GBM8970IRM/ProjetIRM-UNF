@@ -244,20 +244,12 @@
             "mode": "absolute",
             "steps": [
               {
-                "color": "red",
-                "value": null
-              },
-              {
                 "color": "green",
-                "value": 45
-              },
-              {
-                "color": "red",
-                "value": 80
+                "value": null
               }
             ]
           },
-          "unit": "none"
+          "unit": "percent"
         },
         "overrides": []
       },
@@ -470,7 +462,7 @@
             "h": 6,
             "w": 9,
             "x": 1,
-            "y": 26
+            "y": 18
           },
           "id": 6,
           "options": {
@@ -801,8 +793,7 @@
             "mode": "absolute",
             "steps": [
               {
-                "color": "red",
-                "value": null
+                "color": "red"
               },
               {
                 "color": "green",
@@ -918,7 +909,7 @@
             "h": 8,
             "w": 12,
             "x": 0,
-            "y": 42
+            "y": 48
           },
           "id": 8,
           "options": {
@@ -958,7 +949,7 @@
       "type": "row"
     },
     {
-      "collapsed": true,
+      "collapsed": false,
       "gridPos": {
         "h": 1,
         "w": 24,
@@ -978,13 +969,13 @@
     "list": []
   },
   "time": {
-    "from": "now-2d",
+    "from": "now-6h",
     "to": "now"
   },
   "timepicker": {},
   "timezone": "browser",
   "title": "test prometheus prom labs",
   "uid": "be35mqzaa445ce",
-  "version": 27,
+  "version": 39,
   "weekStart": ""
 }
