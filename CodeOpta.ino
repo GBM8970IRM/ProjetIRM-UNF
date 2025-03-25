@@ -1,48 +1,43 @@
 #include <SPI.h>
-#include <Ethernet.h>  // Pour la connexion Ethernet
+#include <Ethernet.h>   // Pour la connexion Ethernet
+#include <HttpClient.h> // Pour envoyer les données HTTP
 #include <ArduinoModbus.h>
 #include <ArduinoRS485.h>
 
-float T0 = 50 + 273.15; //température de référence (K)
-int RT0 = 988.1; //resistance de référence à 50°C (ohms)
-int B = 4100; //constante beta (K)
-int R = 2985; // résistance en série avec le thermomètre (ohms)
-float voltage_thermistor1;
-float voltage_resistance1;
-float resistance_thermistor1;
-float temp1;
+float T0 = 50 + 273.15; // Température de référence (K)
+int RT0 = 988.1; // Résistance de référence à 50°C (ohms)
+int B = 4100; // Constante beta (K)
+int R = 2985; // Résistance en série avec le thermomètre (ohms)
 float division1;
 float division2;
 float lecture_I3;
 float lecture_I4;
-float voltage_thermistor2;
-float voltage_resistance2;
-float resistance_thermistor2;
-float temp2;
-float tempIRM;
-float humIRM;
-float lecture_I1;
-float lecture_I2;
 
-int serverPort = 9091;  // Port du Pushgateway (Par défaut il s'agit de 9091)
-byte mac[] = { 0xA8, 0x61, 0xA, 0x50, 0x5A, 0xE7 };  // Adresse MAC de l'arduino (NE PAS MODIFIER)
-IPAddress server();  // Adresse IP du Pushgateway (Sera celle du serveur)
 
-EthernetClient client; //Connexion au serveur
+float temp1, temp2, tempIRM, humIRM;
+float voltage_thermistor1, voltage_thermistor2;
+float resistance_thermistor1, resistance_thermistor2;
 
-//Initiation du baudrate pour le terminal Sériel et RS485
-constexpr auto baudrate{ 9600 };
+//Chemin sur lequel le pushgateway attend les données
+String url ="/metrics/job/temperature";
 
-constexpr auto bitduration{ 1.f / baudrate };
-constexpr auto wordlen{ 10.0f };
+int serverPort = 9091;  // Port du Pushgateway
+byte mac[] = { 0xA8, 0x61, 0x0A, 0x50, 0x5A, 0xE7 }; // Adresse MAC de l'Arduino
+IPAddress server(); // À remplacer par l'IP du serveur UNF
+
+EthernetClient ethernetClient; // Client Ethernet
+HttpClient client(ethernetClient); // Client HTTP
+//On met l'adresse IP en chaine de caractères pour utiliser HttpClient plus tard
+
+constexpr auto baudrate = 9600;
+constexpr auto bitduration = 1.f / baudrate;
+constexpr auto wordlen = 10.0f;
 // Calcul du délai antérieur et postérieur en microsecondes pour une transmission RS485 stable
-constexpr auto preDelayBR{ bitduration * wordlen * 3.5f * 1e6 };
-constexpr auto postDelayBR{ bitduration * wordlen * 3.5f * 1e6 / 2.0};
-
+constexpr auto preDelayBR = bitduration * wordlen * 3.5f * 1e6;
+constexpr auto postDelayBR = bitduration * wordlen * 3.5f * 1e6 / 2.0;
 
 void setup() {
-
-  //Initiation des entrées et des sorties 
+    //Initiation des entrées et des sorties 
   pinMode(LED_D0, OUTPUT); //Sortie LED du Opta pour signal visuel qu'il est en fonctionnement
   digitalWrite(LED_D0, HIGH);
   pinMode(A2, INPUT);
@@ -50,68 +45,69 @@ void setup() {
   pinMode(A0, INPUT);
   pinMode(A1, INPUT);
   pinMode(D2, OUTPUT);
-  
+
   Serial.begin(baudrate);
   analogReadResolution(12);
 
   // Initialisation de l'Ethernet
   if (Ethernet.begin(mac) == 0) {
     Serial.println("Échec de la configuration Ethernet avec DHCP");
-    while (true);  // Bloque si l'Ethernet échoue et nous envoie un message d'erreur
+    while (true);  // Bloque le programme si l'Ethernet échoue
   }
 
-  delay(2000); // Délai avant de continuer
+  delay(2000);
   Serial.print("Connecté à Ethernet, adresse IP : ");
   Serial.println(Ethernet.localIP());
 
-  //Initialisation de la communication RS485
+  if (!client.connect(server, serverPort)) {
+    Serial.println(" Échec de connexion au serveur !");
+} else {
+    Serial.println(" Connexion réussie !");
+}
+
+  // Initialisation de la communication RS485
   RS485.setDelays(preDelayBR, postDelayBR);
-  if (!ModbusRTUClient.begin(baudrate, SERIAL_8N2))
-  {
-    Serial.println("Modbus begin err.");
-    while(true);
+  if (!ModbusRTUClient.begin(baudrate, SERIAL_8N2)) {
+    Serial.println("Erreur Modbus");
+    while (true);
   }
-  
 }
 
 void loop() {
-  digitalWrite(D2, HIGH); // Active la sortie digitale
-  digitalWrite(LED_D2, HIGH);
 
-  // Lecture des thermistors
+  digitalWrite(D2, HIGH); // Active la sortie digitale
+  digitalWrite(LED_D2, HIGH); //Nous permet de voir si le code marche bien
+
+  //Lecture des thermistors
   lecture_I4=analogRead(A3);
   lecture_I3 =analogRead(A2);
-  voltage_thermistor1 = (5/1935.00) * analogRead(A2); //Lecture 5V
-  voltage_thermistor2 = (5/1935.00) * analogRead(A3); //Lecture 5V
+  voltage_thermistor1 = (5/1935.00) * lecture_I3; //Lecture 5V
+  voltage_thermistor2 = (5/1935.00) * lecture_I4; //Lecture 5V
 
-  // Calcul de la resistance du thermistor (loi d'ohm)
-  resistance_thermistor1 = (voltage_thermistor1 * R)/(5-voltage_thermistor1);
-  resistance_thermistor2 = (voltage_thermistor2 * R)/(5-voltage_thermistor2);
+  // Calcul de la résistance des thermistors (loi d'Ohm)
+  resistance_thermistor1 = (voltage_thermistor1 * R) / (5.0 - voltage_thermistor1);
+  resistance_thermistor2 = (voltage_thermistor2 * R) / (5.0 - voltage_thermistor2);
+
   // Calcul de la température
   division1 = log(resistance_thermistor1/RT0);
   temp1 = (1 / ((division1/B)+(1/T0))) - 273.15;
   division2 = log(resistance_thermistor2/RT0);
   temp2 = (1 / ((division2/B)+(1/T0))) - 273.15;
 
-  //Impression de la température de l'eau
-  Serial.print("TemperatureEauEntrée (°C): ");
-  Serial.println(temp1);
-  Serial.print("TemperatureEauSortie (°C): ");
-  Serial.println(temp2);
-
   //Lecture de la température et de l'humidité de la salle IRM 
   //Requête de données à l'adresse 0x01 (par défault) dans le registre 0x00 (température) et 0x01 (humidité)
   tempIRM = ReadRS485(0x01, 0x00)/100;
   humIRM = ReadRS485(0x01, 0x01)/100;
 
-  //Impression de la température et de l'humidité de la salle IRM
-  Serial.print("Température Salle IRM: ");
-  Serial.print(tempIRM);
-  Serial.println("C");
-
-  Serial.print("Humidité Salle IRM : ");
-  Serial.print(humIRM);
-  Serial.println("%");
+  // Affichage des données
+  Serial.print("Température Entrée (°C): ");
+  Serial.println(temp1);
+  Serial.print("Température Sortie (°C): ");
+  Serial.println(temp2);
+  Serial.print("Température Salle IRM (°C): ");
+  Serial.println(tempIRM);
+  Serial.print("Humidité Salle IRM (%): ");
+  Serial.println(humIRM);
 
   // Préparation des données à envoyer
   String postData = "# HELP temperature_input Temperature in Celsius at input\n";
@@ -134,78 +130,35 @@ void loop() {
   postData += "humidity_IRM{label4=\"humIRM\", unit=\"percent\"} " + String(humIRM);  // Humidité IRM
   postData += "\n";
 
-  // Envoi des données au serveur
-  if (client.connect(server, serverPort)) {
-    Serial.println("Connecté au Pushgateway");
+  char serverStr[16];
+  sprintf(serverStr, "%d.%d.%d.%d", server[0], server[1], server[2], server[3]);
 
-    // Création de la requête HTTP POST (Voir si l'utilisation de la requête PUT marche mieux)
-    client.print("PUT /metrics/job/temperature HTTP/1.1\r\n"); // Le job name dans le yml est temperature
-    client.print("Host: ");
-    client.print(server.toString());
-    client.print("\r\n");
-    client.print("Content-Type: text/plain\r\n"); 
-    client.print("X-Content-Type-Options: nosniff\r\n");// Texte brut pour envoyer la métrique
-    client.print("Content-Length: ");
-    client.print(postData.length());
-    client.print("\r\n");
-    client.print("Connection: close\r\n");  // Ferme la connexion après la requête
-    client.print("\r\n");  // Fin des en-têtes
-    client.print(postData);  // Corps de la requête avec les données de la métrique
-    //Serial.print(postData);
+  // Envoi des données via HttpClient 
+  Serial.println("Envoi des données au serveur...");
+  client.beginRequest();
+  client.put(serverStr, serverPort, url.c_str());  
+  client.sendHeader("Content-Type", "text/plain");
+  client.sendHeader("Content-Length", postData.length());
+  client.print(postData);
+  client.endRequest();
 
-    // Attendre la réponse du serveur
-    while (client.connected() && !client.available()) {
-      delay(1);  // Attendre la réponse
-    }
-    while (client.available()) {
-      char rep = client.read();
-      //Serial.write(rep);  // Afficher la réponse du serveur
-    }
+  // Lire la réponse du serveur
+  int statusCode = client.responseStatusCode();
+  Serial.print("Code réponse: ");
+  Serial.println(statusCode);
 
-    client.stop();  // Fermer la connexion
-  } else {
-    Serial.println("Échec de la connexion au Pushgateway");
-  }
+  client.stop();
 
-  delay(5000);  // Attendre 5 secondes avant d'envoyer à nouveau
+  delay(5000); // Pause avant la prochaine envoi
 }
 
-float mapfloat(float x, float in_min, float in_max, float out_min, float out_max)
-{
-  return (float)(x - in_min) * (out_max - out_min) / (float)(in_max - in_min) + out_min;
-}
-
-float GetStableReadings(int pin, int numReadings) {
-  long total = 0;  // Variable pour la somme des lectures
-  int reading;
-
-  // Faire plusieurs lectures et additionner les valeurs
-  for (int i = 0; i < numReadings; i++) {
-    reading = analogRead(pin);  // Lire la valeur analogique
-    total += reading;           // Ajouter la lecture à la somme
-    delay(10);                  // Petit délai pour éviter une lecture trop rapide
-  }
-
-  // Retourner la moyenne des lectures
-  return total / numReadings;
-}
-
-float ReadRS485(int addr, int reg)
-{
-  //Variable temporaire qui garde la donnée du
+float ReadRS485(int addr, int reg) {
   int w1 = 0;
-  //Request data from device addr with register reg with data size 1. (change HOLDING_REGISTERS according to which type of register you're reading from)
-  if(!ModbusRTUClient.requestFrom(addr, HOLDING_REGISTERS, reg, 1))
-  {
-    //If it failed, print error to console
-    Serial.println("Failed reading from Modbus");
+  if (!ModbusRTUClient.requestFrom(addr, HOLDING_REGISTERS, reg, 1)) {
+    Serial.println("Erreur lecture Modbus");
     Serial.println(ModbusRTUClient.lastError());
-  }
-  else
-  {
-    //If it succeeded, write the read value to a variable
+  } else {
     w1 = ModbusRTUClient.read();
   }
-  //Return the read data
   return w1;
 }
