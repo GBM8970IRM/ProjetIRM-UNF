@@ -1,0 +1,9 @@
+(sym_lib_table
+  (version 7)
+  (lib (name "Opta_sym")(type "KiCad")(uri "${KIPRJMOD}/Opta_sym.kicad_sym")(options "")(descr ""))
+  (lib (name "LM324N")(type "KiCad")(uri "${KIPRJMOD}/AmpliOp/LM324N.kicad_sym")(options "")(descr ""))
+  (lib (name "AmpliOp")(type "KiCad")(uri "${KIPRJMOD}/AmpliOp.kicad_sym")(options "")(descr ""))
+  (lib (name "Opta")(type "KiCad")(uri "${KIPRJMOD}/AmpliOp/Opta.kicad_sym")(options "")(descr ""))
+  (lib (name "Extension_opta")(type "KiCad")(uri "${KIPRJMOD}/Extension_opta.kicad_sym")(options "")(descr ""))
+  (lib (name "Debitmetre")(type "KiCad")(uri "${KIPRJMOD}/Debitmetre.kicad_sym")(options "")(descr ""))
+)
