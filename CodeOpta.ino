@@ -1,3 +1,4 @@
+#include <OptaBlue.h>     // Librairie utilisée pour la lecture du débit. 
 #include <Ethernet.h>     // Pour établir la connexion à l'aide d'Ethernet de l'arduino.
 #include <HttpClient.h>   // Pour envoyer les données HTTP de l'arduino vers le serveur.
 #include <ArduinoModbus.h>// Librairie qui permet d'utiliser le port Modbus de l'arduino avec le thermomètre humidité-temperature.
@@ -23,6 +24,8 @@ float temp_entree, temp_sortie, temp_irm, hum_irm;
 float voltage_thermistor1, voltage_thermistor2;
 float resistance_thermistor1, resistance_thermistor2;
 
+using namespace Opta; // Nous permet d'éviter les préfixes pour les appels de fonctions. 
+
 //Constantes requises au bon fonctionnement de l'envoi de données.
 String url ="/metrics/job/temperature";
 int serverPort = 9091;  // Port du Prometheus Pushgateway.
@@ -32,6 +35,9 @@ IPAddress server(10, 200, 38, 184); // Adresse IP du serveur qui reçoit les don
 //Création des objets pour la connexion.
 EthernetClient ethernetClient; // Création d'un objet de type EthernetClient pour établir une connexion réseau.
 HttpClient client(ethernetClient); // Création d'un objet nommé client pour envoyer des requêtes HTTP à partir de la conexion établie par ethernetClient.
+
+// Définition du canal 0 pour la lecture du débit
+#define CANAL 0
 
 //Fonctions utile tout le long du code. 
 // Fonction pour le calcul de la résistance selon la lecture d'une PINS utilisé pour les thermomètres de l'eau.
@@ -53,6 +59,15 @@ float ReadRS485(int addr, int reg) {
     w1 = ModbusRTUClient.read();
   }
   return w1;
+}
+
+void CurrentRead(){
+    // Lecture du courant sur le canal CANAL
+  AnalogExpansion exp = OptaController.getExpansion(0); // On suppose que l'extension est sur l'index 0
+  if (exp) {
+    float current_mA = exp.pinCurrent(CANAL);
+    Serial.println("Courant mesuré : " + String(current_mA) + " mA");
+  }
 }
 
 void setup() {
@@ -91,33 +106,26 @@ void setup() {
   }
 }
 
+  OptaController.begin(); // On active le protocole du contrôleur du opta
+  // Initialisation du canal CANAL sur l'extension 0
+  AnalogExpansion::beginChannelAsAdc(OptaController, 0, CANAL, OA_CURRENT_ADC, false, false, false, 0);
+}
+
 void loop() {
   digitalWrite(LED_D2, HIGH); //Nous permet de voir si le code entre bien dans la boucle en allumant une LED.
 
-  //Lecture des thermistors
+  //Lecture des thermistors puis calculs de la température
   lecture_sortie=analogRead(A3);
   lecture_entree =analogRead(A2);
   temp_entree = calcultemperature(lecture_entree);
   temp_sortie = calcultemperature(lecture_sortie);
 
-/*  À valider si le changement est bon : 
-  voltage_thermistor1 = (5/1935.00) * lecture_entree; //Lecture 5V
-  voltage_thermistor2 = (5/1935.00) * lecture_sortie; //Lecture 5V
-  // Calcul de la résistance des thermistors (loi d'Ohm)
-  resistance_thermistor1 = (voltage_thermistor1 * RESISTANCE_SERIE) / (5.0 - voltage_thermistor1);
-  resistance_thermistor2 = (voltage_thermistor2 * RESISTANCE_SERIE) / (5.0 - voltage_thermistor2);
-
-  // Calcul de la température
-  division_thermometre1 = log(resistance_thermistor1/RESISTANCE_REFERENCE);
-  temp_entree = (1 / ((division_thermometre1/BETA)+(1/TEMPERATURE_REFERENCE))) - 273.15;
-  division2 = log(resistance_thermistor2/RESISTANCE_REFERENCE);
-  temp_sortie = (1 / ((division2/BETA)+(1/TEMPERATURE_REFERENCE))) - 273.15;
-*/
-
   //Lecture de la température et de l'humidité de la salle IRM 
   //Requête de données à l'adresse 0x01 (par défault) dans le registre 0x00 (température) et 0x01 (humidité)
   temp_irm = ReadRS485(0x01, 0x00)/100;
   hum_irm = ReadRS485(0x01, 0x01)/100;
+  OptaController.update(); // Mise à jour du controleur opta.
+  CurrentRead(); // Fonction pour la lecture du débit.
 
   // Affichage des données dans le serial print afin de détecter les erreurs.
   Serial.print("Température Entrée (°C): ");
