@@ -23,6 +23,7 @@ float division_thermometre1, division2, lecture_entree, lecture_sortie;
 float temp_entree, temp_sortie, temp_irm, hum_irm;
 float voltage_thermistor1, voltage_thermistor2;
 float resistance_thermistor1, resistance_thermistor2;
+float flow;
 
 using namespace Opta; // Nous permet d'éviter les préfixes pour les appels de fonctions. 
 
@@ -30,7 +31,7 @@ using namespace Opta; // Nous permet d'éviter les préfixes pour les appels de 
 String url ="/metrics/job/temperature";
 int serverPort = 9091;  // Port du Prometheus Pushgateway.
 byte mac[] = { 0xA8, 0x61, 0x0A, 0x50, 0x5A, 0xE7 }; // Adresse MAC assigné à l'arduino.
-IPAddress server(10, 200, 38, 184); // Adresse IP du serveur qui reçoit les données.
+IPAddress server(10, 10, 10, 20); // Adresse IP du serveur qui reçoit les données.
 
 //Création des objets pour la connexion.
 EthernetClient ethernetClient; // Création d'un objet de type EthernetClient pour établir une connexion réseau.
@@ -61,14 +62,22 @@ float ReadRS485(int addr, int reg) {
   return w1;
 }
 
-void CurrentRead(){
+float CurrentRead(){
     // Lecture du courant sur le canal CANAL
   AnalogExpansion exp = OptaController.getExpansion(0); // On suppose que l'extension est sur l'index 0
   if (exp) {
     float current_mA = exp.pinCurrent(CANAL);
-    Serial.println("Courant mesuré : " + String(current_mA) + " mA");
+    return current_mA;
   }
 }
+
+//Fonction qui transforme le courant mesuré en débit avant de l'envoyer à l'interface. 
+float FlowCalcul(float current){
+  float min = 0 ; // Débit minimal (4mA) configuré dans le module Q9 Display a modifier au besoin en litre/min les unités sont arbitraires. 
+  float max = 100 ; // Débit maximal(20mA) configuré dans le module Q9 Display a modifier au besoin en litre/min les unités sont arbitraires. 
+  float debit = (current - 4) * (max - min) / (20 - 4) + 0;
+  return debit ;
+} 
 
 void setup() {
   //Initiation des PINS d'entrées et de sorties.
@@ -104,7 +113,7 @@ void setup() {
     Serial.println("Erreur Modbus");
     while (true);
   }
-}
+
 
   OptaController.begin(); // On active le protocole du contrôleur du opta
   // Initialisation du canal CANAL sur l'extension 0
@@ -125,7 +134,8 @@ void loop() {
   temp_irm = ReadRS485(0x01, 0x00)/100;
   hum_irm = ReadRS485(0x01, 0x01)/100;
   OptaController.update(); // Mise à jour du controleur opta.
-  CurrentRead(); // Fonction pour la lecture du débit.
+  float courant=CurrentRead(); // Fonction pour la lecture du débit.
+  flow = FlowCalcul(courant);
 
   // Affichage des données dans le serial print afin de détecter les erreurs.
   Serial.print("Température Entrée (°C): ");
@@ -136,6 +146,9 @@ void loop() {
   Serial.println(temp_irm);
   Serial.print("Humidité Salle IRM (%): ");
   Serial.println(hum_irm);
+  Serial.println("Courant mesuré : " + String(courant) + " mA");
+  Serial.print("débit (L/min): ");// Unité de débit à modifier au besoin.
+  Serial.println(flow);
 
   // Préparation des données à envoyer
   String postData = "# HELP temperature_input Temperature in Celsius at input\n";
@@ -156,6 +169,11 @@ void loop() {
   postData += "# HELP humidity_IRM Humidity IRM in percentage\n";
   postData += "# TYPE humidity_IRM gauge\n";
   postData += "humidity_IRM{label4=\"humIRM\", unit=\"percent\"} " + String(hum_irm);  // Humidité IRM
+  postData += "\n";
+
+  postData += "# HELP flow water flow in liters/min \n";
+  postData += "# TYPE flow gauge\n";
+  postData += "flow{label4=\"flow\", unit=\"L/min\"} " + String(flow);  // Humidité IRM
   postData += "\n";
 
   // On convertie l'adresse IP pour l'obtenir en chaine de caractères.
