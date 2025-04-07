@@ -1,7 +1,7 @@
 #On configure des valeurs globales
 global:
-  scrape_interval: 15s # La durée entre chaque scrape est configurée à 15 secondes (par défaut on parle d'une minute.)
-  evaluation_interval: 15s # les règles sont évalué à chaque 15 s
+  scrape_interval: 5s # La durée entre chaque scrape est configurée à 15 secondes (par défaut on parle d'une minute.)
+  evaluation_interval: 5s # les règles sont évalué à chaque 15 s
   # scrape_timeout est laissé à la valeur par défaut de 10s 
 
 # Alertmanager configuration
