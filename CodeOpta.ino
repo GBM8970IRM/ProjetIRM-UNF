@@ -6,7 +6,8 @@
 
 //Liste de constantes nécessaires aux calculs
 float TEMPERATURE_REFERENCE = 50 + 273.15; // Température de référence (K)
-int RESISTANCE_REFERENCE = 988.1; // Résistance de référence à 50°C (ohms)
+int RESISTANCE_THERMO1 = 988.1; // Résistance de référence à 50°C (ohms)
+int RESISTANCE_THERMO2 = 988.1; // Résistance de référence à 50°C (ohms)
 int BETA = 4100; // Constante beta (K)
 int RESISTANCE_SERIE = 2985; // Résistance en série avec le thermomètre (ohms)
 
@@ -31,7 +32,7 @@ using namespace Opta; // Nous permet d'éviter les préfixes pour les appels de 
 String url ="/metrics/job/temperature";
 int serverPort = 9091;  // Port du Prometheus Pushgateway.
 byte mac[] = { 0xA8, 0x61, 0x0A, 0x50, 0x5A, 0xE7 }; // Adresse MAC assigné à l'arduino.
-IPAddress server(10, 10, 10, 20); // Adresse IP du serveur qui reçoit les données.
+IPAddress server(10, 200, 38, 184); // Adresse IP du serveur qui reçoit les données.
 
 //Création des objets pour la connexion.
 EthernetClient ethernetClient; // Création d'un objet de type EthernetClient pour établir une connexion réseau.
@@ -42,11 +43,11 @@ HttpClient client(ethernetClient); // Création d'un objet nommé client pour en
 
 //Fonctions utile tout le long du code. 
 // Fonction pour le calcul de la résistance selon la lecture d'une PINS utilisé pour les thermomètres de l'eau.
-float calcultemperature (float lecture_pin) {
+float calcultemperature (float lecture_pin, float resistance_thermo) {
   float voltage= (5/1935.00) * lecture_pin; //Lecture  sur 5V
   float resistance = (voltage * RESISTANCE_SERIE) / (5.0 - voltage); //Calcul de la résistance par diviseur de tension.
-  float division = log(resistance/RESISTANCE_REFERENCE); // calcul de division pour suivre la courbe du thermomètre.
-  float temp = (1 / ((division/BETA)+(1/TEMPERATURE_REFERENCE))) - 273.15; // Calcul de la température.
+  float division = log(resistance/resistance_thermo); // calcul de division pour suivre la courbe du thermomètre.
+  float temp = (1 / ((division/BETA)+(1/resistance_thermo))) - 273.15; // Calcul de la température.
   return temp;
 }
 
@@ -126,8 +127,8 @@ void loop() {
   //Lecture des thermistors puis calculs de la température
   lecture_sortie=analogRead(A3);
   lecture_entree =analogRead(A2);
-  temp_entree = calcultemperature(lecture_entree);
-  temp_sortie = calcultemperature(lecture_sortie);
+  temp_entree = calcultemperature(lecture_entree, RESISTANCE_THERMO1);
+  temp_sortie = calcultemperature(lecture_sortie, RESISTANCE_THERMO2);
 
   //Lecture de la température et de l'humidité de la salle IRM 
   //Requête de données à l'adresse 0x01 (par défault) dans le registre 0x00 (température) et 0x01 (humidité)
@@ -173,7 +174,7 @@ void loop() {
 
   postData += "# HELP flow water flow in liters/min \n";
   postData += "# TYPE flow gauge\n";
-  postData += "flow{label4=\"flow\", unit=\"L/min\"} " + String(flow);  // Humidité IRM
+  postData += "flow{label4=\"flow\"} " + String(flow);  // Humidité IRM
   postData += "\n";
 
   // On convertie l'adresse IP pour l'obtenir en chaine de caractères.
