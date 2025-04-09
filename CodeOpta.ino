@@ -6,8 +6,8 @@
 
 //Liste de constantes nécessaires aux calculs
 float TEMPERATURE_REFERENCE = 50 + 273.15; // Température de référence (K)
-int RESISTANCE_THERMO1 = 988.1; // Résistance de référence à 50°C (ohms)
-int RESISTANCE_THERMO2 = 988.1; // Résistance de référence à 50°C (ohms)
+int RESISTANCE_THERMO1 = 930; // Résistance de référence à 50°C (ohms), ajustée selon test pour meilleure exactitude
+int RESISTANCE_THERMO2 = 890; // Résistance de référence à 50°C (ohms), ajustée selon test pour meilleure exactitude
 int BETA = 4100; // Constante beta (K)
 int RESISTANCE_SERIE = 2985; // Résistance en série avec le thermomètre (ohms)
 
@@ -47,7 +47,7 @@ float calcultemperature (float lecture_pin, float resistance_thermo) {
   float voltage= (5/1935.00) * lecture_pin; //Lecture  sur 5V
   float resistance = (voltage * RESISTANCE_SERIE) / (5.0 - voltage); //Calcul de la résistance par diviseur de tension.
   float division = log(resistance/resistance_thermo); // calcul de division pour suivre la courbe du thermomètre.
-  float temp = (1 / ((division/BETA)+(1/resistance_thermo))) - 273.15; // Calcul de la température.
+  float temp = (1 / ((division/BETA)+(1/TEMPERATURE_REFERENCE))) - 273.15; // Calcul de la température.
   return temp;
 }
 
@@ -132,7 +132,7 @@ void loop() {
 
   //Lecture de la température et de l'humidité de la salle IRM 
   //Requête de données à l'adresse 0x01 (par défault) dans le registre 0x00 (température) et 0x01 (humidité)
-  temp_irm = ReadRS485(0x01, 0x00)/100;
+  temp_irm = ReadRS485(0x01, 0x00)/100 - 0.8; //Ajusté (-0.8 degrés) selon test pour meilleure exactitude
   hum_irm = ReadRS485(0x01, 0x01)/100;
   OptaController.update(); // Mise à jour du controleur opta.
   float courant=CurrentRead(); // Fonction pour la lecture du débit.
