@@ -1,8 +1,8 @@
 # User Guide 
 
 # MRI Monitoring Device
+![](Images/CoverImage.png)
 
-![][image1]
 
 As part of the GBM8970 course  
 For the UNF  
@@ -59,7 +59,7 @@ This guide explains how to install and operate the MRI monitoring system designe
 
 **SAFETY WARNINGS**  
 The box and its components are magnetic and must not be moved into the MRI room in order to avoid the risk of injury.  
-![][image2]
+![](Images/MRI.png)
 
 # How to Install Prometheus
 
@@ -68,19 +68,19 @@ The following procedure explains how to install Prometheus, which acts as a temp
 1. First, Prometheus must be downloaded onto the host server. To do so, follow this link: [https://prometheus.io/download/](https://prometheus.io/download/)   
    1. Select the operating system of the server.
 
-| ![][image3] |
+| ![](Images/Prometheus.png) |
 | :---: |
 | *Figure 1: Système d’exploitation* |
 
 2. Choose the LTS (Long Term Support) version for better stability and download the .zip file. Transfer this file to the desired folder on the server.
 
-| ![][image4] |
+| ![](Images/LTS.png) |
 | :---: |
 | *Figure 2: LTS Version* |
 
 3. You will also need the Prometheus Pushgateway to temporarily host data coming from the Arduino until it is imported by Prometheus. By scrolling through the Prometheus download page, you will find the section related to the Pushgateway.
 
-| ![][image5] |
+| ![](Images/Pushgateway.png) |
 | :---: |
 | *Figure 3: Pushgateway* |
 
@@ -90,7 +90,7 @@ The following procedure explains how to install Prometheus, which acts as a temp
 
 5. By default, the applications use ports 9090 and 9091 respectively. These can be changed by modifying the corresponding lines in the Docker Compose file. Once this step is complete, both applications should be functional.
 
-| ![][image6] |
+| ![](Images/Docker.png) |
 | :---: |
 | *Figure 4: Docker Compose File* |
 
@@ -101,13 +101,13 @@ The following procedure explains how to install Prometheus, which acts as a temp
 Grafana is the application used to generate graphs, visualize data, create alerts, and manage them. To get started, you can follow the link below to download the appropriate version of Grafana based on your operating system. For the version, select the latest available release. This procedure is also for installation when using a standalone computer. On the UNF servers, this application is launched via Docker Compose.  
 [https://grafana.com/grafana/download](https://grafana.com/grafana/download) 
 
-| ![][image7] |
+| ![](Images/Grafana.png) |
 | ----- |
 | *Figure 5: Download Grafana* |
 
 The download can be done in two different ways, regardless of the chosen operating system: either via standalone binary or by installing directly. For each option, an installation guide can be found just below the selected version.
 
-| ![][image8] |
+| ![](Images/GrafanaGuide.png) |
 | ----- |
 | *Figure 6: User Guide to Download Grafana* |
 
@@ -134,7 +134,7 @@ The following procedure explains how to create a Grafana dashboard:
 
 After linking the alerts to a specific panel of the dashboard (refer to the alert rules instructions), you can display the alerts in your dashboard by selecting the **Alert list** panel. The displayed alerts can then be filtered; for example, you can choose to display only alerts in "firing" mode or in "normal" mode.
 
-| ![][image9] |
+| ![](Images/AlertList.png) |
 | :---: |
 | *Figure 7: Alert List on the Grafana Dashboard* |
 
@@ -150,11 +150,11 @@ When displaying the graph of data related to an alert (for example, water temper
    1. In the Settings of the dashboard, go to the Annotations section.  
    2. In the Query "Annotations & Alerts (Built-in)", ensure that the query is set to Enabled and is filtered by Dashboard.
 
-| ![][image10] |
+| ![](Images/AlertGraph.png) |
 | :---: |
 | *Figure 8: Graph Showing Alert Logs*  |
 
-      ### *Alert State History* {#alert-state-history}
+### *Alert State History* {#alert-state-history}
 
 It is possible to access the alert history.
 
@@ -164,7 +164,7 @@ It is possible to access the alert history.
 4. Click Show state history, and you will see the triggered and resolved alerts (Alerting, Normal, Normal (Paused), or Normal (Updated)), along with the name of the triggered metric, its value, and its trigger date and time. It will also display the metric and its value.  
    
 
-| ![][image11] |
+| ![](Images/AlertLogs.png) |
 | :---: |
 | *Figure 9: Logs of Alerts Status* |
 
@@ -178,7 +178,7 @@ To create an alert in Grafana, there are three steps to follow in the Alerting s
 2. Contact points: Determine where the alert is sent.  
 3. Notification policies: Define which alert is sent to which contact point.
 
-| ![][image12] |
+| ![](Images/CreateAlerts.png) |
 | :---: |
 | *Figure 10: How to Create an Alert in Grafana* |
 
@@ -225,11 +225,11 @@ Defining contact points allows you to specify where the alert will be sent. Thes
 7. The contact point is tested by sending a **Notification** **message**.  
 8. Save the contact point.
 
-   ### *Notification Templates* {#notification-templates}
+### *Notification Templates* {#notification-templates}
 
 It is possible to create templates for contact points to customize the notification models sent. Grafana provides a default template for the title and message of the notification. Here's an example for the message of an alert:
 
-| {{ define "slack.body" }} {{ range .Alerts }} {{ if eq .Status "firing" }} \*Summary\*: {{ .Annotations.summary }} {{ else if eq .Status "resolved" }} \*RESOLVED\*: The {{ .Labels.alertname }} has returned to normal. The system is now operating within acceptable parameters. {{ end }} {{ end }} {{ end }} |
+| ![](Images/AlertMessage.png)|
 | ----- |
 | *Figure 11: Example of Alert Message* |
 
@@ -240,7 +240,7 @@ Defining notification policies allows you to determine how alerts are routed to 
 1. Select New child policy.  
 2. Define the condition that triggers the alert to be sent by selecting a label and the associated value (e.g., \=, \!=, \=\~, \!\~). It is important that the label in question has been defined in the alert rule.
 
-| ![][image13] Grafana Labs, *Notification policies*, consulté le 12 février 2025, [https://grafana.com/docs/grafana/latest/alerting/fundamentals/notifications/notification-policies/](https://grafana.com/docs/grafana/latest/alerting/fundamentals/notifications/notification-policies/) |
+| ![](Images/Notification.png) Grafana Labs, *Notification policies*, consulté le 12 février 2025, [https://grafana.com/docs/grafana/latest/alerting/fundamentals/notifications/notification-policies/](https://grafana.com/docs/grafana/latest/alerting/fundamentals/notifications/notification-policies/) |
 | ----- |
 | *Figure 12: Notification Policies* |
 
@@ -256,15 +256,15 @@ Defining notification policies allows you to determine how alerts are routed to 
 
 This section explains how the sensors (fluid thermometers, temperature/humidity sensors, and flow meter), the power supply, the Arduino Opta, and the Arduino extension are connected to the PCB in case they become disconnected and need to be reconnected. The PCB schematic is shown in *Figure 13*, the PCB itself is presented in *Figure 14*, and the connections are illustrated in *Figure 15*.
 
-| ![][image14] |
+| ![](Images/PCBdiagram.png) |
 | ----- |
 | *Figure 13: PCB Diagram on KiCad*  |
 
-| ![][image15] |
+| ![](Images/PCBdesign.png) |
 | :---: |
 | *Figure 14: PCB Design on KiCad*  |
 
-| ![][image16] |
+| ![](Images/PCBwiring.png) |
 | :---: |
 | *Figure 15: PCB Wiring Diagram* |
 
@@ -281,7 +281,7 @@ Below is a list describing the connection of each component (note that the left 
 
 The CB connectors with 4 and 6 pins for data transmission from the MRI room and the chiller are organized as follows:
 
-| ![][image17] |
+| ![](Images/Connector.png) |
 | ----- |
 | *Figure 16: PCB Connector Diagram* |
 
