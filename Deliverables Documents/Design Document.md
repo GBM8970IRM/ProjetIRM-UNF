@@ -3,8 +3,8 @@
 Monitoring de salle d’IRM  
 **DOCUMENT DE DESIGN**  
 ***(DESIGN DOCUMENT)***  
-**GBM8970.002 v 0.6**  
-**9 avril 2025**
+**GBM8970.002 v 0.7**  
+**11 avril 2025**
 
 	
 
@@ -80,7 +80,7 @@ Ce projet consiste en la création d’un prototype fonctionnel permettant de li
 
 Le prototype se sépare en cinq grandes sous-sections, soit la mesure de la température de l’eau à l’entrée et à la sortie du chiller, la mesure de la température et de l’humidité de la salle d’IRM,  la mesure du débit de l’eau dans le chiller, le boîtier de rangement et finalement le design de l’interface Web sur Grafana. La figure 1 suivante présente la structure globale du projet. 
 
-| ![][image6] |
+| ![](../Images/Structure.png) |
 | :---: |
 | **Figure 1 :** Structure globale du prototype de monitoring de la salle d’IRM |
 
@@ -106,13 +106,13 @@ Cette section du produit comprend la plateforme Grafana et ses intermédiaires P
 
 La figure 2 présente le circuit final, incluant les sections 1 (mesure de la température de l’eau à l’entrée et à la sortie du chiller), 2 (mesure de la température et de l’humidité de la salle IRM) et 3 (mesure du débit de l’eau à l’entrée du chiller). Cette figure servira de référence pour les fonctionnements détaillés expliqués dans les sections suivantes du présent document. La figure 3 suivante représente le PCB tel qu’il a été imprimé par le manufacturier. 
 
-![][image7]
+|![](../Images/PCBdiagram.png)|
+| :---: |
+|**Figure 2 :** Circuit final du projet|
 
-**Figure 2 :** Circuit final du projet
-
-![][image8]
-
-**Figure 3 :** PCB final du projet
+|![](../Images/PCBdesign.png)|
+| :---: |
+|**Figure 3 :** PCB final du projet|
 
 2. ## **Fonctionnement électrique détaillé de la section 1 : Mesure de la température de l’eau à l’entrée et à la sortie du chiller** 
 
@@ -130,11 +130,12 @@ Afin de mesurer le débit de l’eau à l’entrée du chiller de l’IRM, un d�
 
 L’Annexe B présente le code Arduino envoyé dans le Opta. Il prend en entrée le voltage des deux thermomètres à fluide GE-2093 (*voltage\_thermistor1* et *voltage\_thermistor2*) pour calculer la température à l’aide de l’équation suivante : 
 
-temp1 \= log((voltage\_thermistor1R)/(5-voltage\_thermistor1)RT0B+1T0-1 \- 273,15
+
+$temp1 = \left( \frac{\log \left( \frac{(voltage \textunderscore thermistor1 \cdot R)}{(5 - voltage \textunderscore thermistor1) \cdot RT0} \right) }{B} +  \frac{1}{T0} \right)^{-1} - 273.15$
 
 où R () est la résistance en série avec le thermistor dans le circuit, RT0 () est la résistance du thermomètre GE-2093 à sa température de référence T0, et B (K) est sa constante beta.
 
-Il reçoit également les variables tempIRM et humIRM envoyées par le Nano. La fonction *GetStableReadings* est utilisée, car puisque c’est un signal PMW qui est envoyé du Nano, les mesures oscillent beaucoup et cette fonction permet de les stabiliser en se basant sur 50 lectures. Ensuite, le code les retransforme en valeurs de \[15,25\]°C pour la température et de \[0,100\]% pour l’humidité à partir des lectures entre 0 et 2048 409610V / 5V.
+L’Arduino Opta lit également la température et l’humidité de la salle IRM en recevant les données du thermomètre S-TH-01 de Seedstudio par son modbus RS485. Les données se lisent à l’adresse du thermomètre qui est 0x01 par défaut et dans les registres 0x00 et 0x01 pour la température et l’humidité respectivement. Les valeurs sont ensuite divisées par 100 pour être transformées en degrés Celsius et en pourcentage d’humidité.
 
 Enfin, ce code introduit la connexion Ethernet en se connectant au port (9091 par défaut) et à l’adresse IP de l’ordinateur qui accueille le Pushgateway. La commande Ethernet.begin(mac) démarre la communication entre le Pushgateway et l’adresse Mac du Arduino Opta (A8:61:A:50:5A:E7). C’est la fonction PostData qui transforme les données temp1, temp2, tempIRM et humIRM en chaînes de caractères et les transmet au Prometheus de l’ordinateur qui correspond à l’adresse IP inscrite. Pour envoyer des données, les fonctions POST ou PUT peuvent être utilisées, et dans le cadre du projet, la communication fonctionne mieux avec PUT, car il s’agit de la méthode privilégiée pour mettre à jour des données sur un serveur.
 
@@ -142,29 +143,29 @@ Enfin, ce code introduit la connexion Ethernet en se connectant au port (9091 pa
 
 La solution retenue est fixée à l’intérieur d’un boîtier de rangement CHKO1086 du manufacturier Hammond. Il s’agit d’un boîtier électrique en acier certifié par CSA de dimension 254 mm x 203 mm x 152 mm. Ce boîtier est constitué de “knock-out holes” ce qui permet d’insérer les câbles et fils des différents capteurs à l’intérieur de la boîte pour les connecter au Arduino Opta. L’arduino Opta et son module 4-20mA peuvent être installés sur un DIN rail donc il y en a un qui a été fixé au fond du boîtier. L’installation du DIN rail au fond du boîtier a laissé des boulons qui dépassent sous celui-ci, donc des pattes en caoutchouc ont été ajoutées pour rééquilibrer le boîtier ainsi que pour le stabiliser et éviter qu’il ne glisse et tombe lors d’un accrochage. Le PCB est également installé dans le boîtier sur une pièce imprimée en 3D qui le maintient en place. Cette pièce en PLA se fixe au boîtier par aimants de terre rare, ce qui offre un bon ancrage, mais qui permet également de la liberté au niveau de la disposition des composantes dans le boîtier. Ci-dessous se trouve un schéma de la disposition des composantes dans le boîtier ainsi que leur connection aux éléments externes :
 
-![][image9]
-
-**Figure 4 :** Schéma de disposition du boîtier
+|![](../Images/Casing.png)|
+| :---: |
+|**Figure 4 :** Schéma de disposition du boîtier|
 
 La pièce qui tient le PCB est imprimée en 3D en PLA en suivant ce plan suivant : 
 
-![][image10]
-
-**Figure 5 :** Dessin technique du support à PCB
+|![](../Images/PCBholder.png)|
+| :---: |
+|**Figure 5 :** Dessin technique du support à PCB|
 
 Le PCB y est fixé avec des vis M3, et cette pièce s’attache au boîtier avec des aimants ronds 8 mm x 3 mm. Les câbles sortiront du boîtier par les “knock-out holes”, mais afin de rendre la solution plus esthétique et pratique, des bagues seront imprimées en 3D en PLA et  installées dans les trous. 3 Types de bagues seront utilisées : des bagues pleines qui servent à bloquer des trous ouverts, mais non utilisés, des bagues “connecteur” qui tiendront un connecteur de type CB pour le lien entre les capteurs et le PCB et une bague “alimentation” qui vient tenir le terminal à vis de l’alimentation. Les pièces sont imprimées selon les croquis suivants : 
 
-![][image11]
+|![](../Images/FullRing.png)|
+| :---: |
+|**Figure 6 :** Dessin technique de la bague pleine|
 
-**Figure 6 :** Dessin technique de la bague pleine
+|![](../Images/ConnectorRing.png)|
+| :---: |
+|**Figure 7 :** Dessin technique de la bague “connecteur”|
 
-![][image12]
-
-**Figure 7 :** Dessin technique de la bague “connecteur”
-
-![][image13]
-
-**Figure 8 :** Dessin technique de la bague “Alimentation”
+|![](../Images/PowerRing.png)|
+| :---: |
+|**Figure 8 :** Dessin technique de la bague “Alimentation”|
 
 Tous les dessins techniques et fichiers STL sont fournis au client si une réimpression est nécessaire.
 
@@ -172,6 +173,10 @@ Tous les dessins techniques et fichiers STL sont fournis au client si une réimp
 7. ## **Description détaillée de la section 5 : Design du site Web sur Grafana**
 
 Présentement la solution retenue pour la partie de l’interface Web du projet et du stockage de données est Grafana et Prometheus. Tout d’abord, il est essentiel de comprendre comment fonctionne l’arrivée des données une fois qu’elles sont transmises par l’Arduino. Une fois que les données sont envoyées, ces dernières sont envoyées vers ce qui s'appelle le Prometheus Pushgateway. Ce dernier agit comme un stockage temporaire qui accueille les données envoyées par le système de l’Arduino le temps que Prometheus les récupère. Cette étape est requise dans le design, car elle évite à l’Arduino de devoir produire un serveur HTTP qui expose les données afin de les rendre accessibles. Ce dernier doit simplement gérer l’envoi vers le Pushgateway. Ensuite, les données sont récupérées par Prometheus qui les interprète et les stock localement, par défaut, pour une durée de 15 jours. Ces données sont ensuite affichées par le biais de l’interface Grafana qui sera aussi chargée de la gestion des alertes et de la présentation des historiques des interventions. Ainsi, un dashboard sera activé dans un des ports local du serveur de l’UNF. Il s’agit de la connexion à ce dernier qui permettra de visualiser les activités enregistrées par le produit. 
+
+|![](../Images/Dashboard.png)|
+| :---: |
+|**Figure 9 :** Interface Graphique Grafana|
 
 3. # **DESIGNS ALTERNATIFS NON RETENUS**
 
@@ -189,9 +194,9 @@ La figure 9 contient une première version du circuit pour les sections 1 et 2, 
 
 Pour cette première version du circuit, l’Arduino Opta était présent afin de recevoir les informations des capteurs et les transmettre à notre interface Web, tel que demandé par le client. L’Arduino Nano, quant à lui, était nécessaire pour lire les informations provenant du capteur de température et d’humidité, puisque le Opta ne peut lire les bus I2C. Pour alimenter ces deux Arduinos, un «power supply» de 12V était donc nécessaire. Toutefois, les différents capteurs nécessitent une alimentation de 5V, et c’est pourquoi un régulateur de tension LM7805 permettant de transformer 12V en 5V a été inclus au circuit, avec deux condensateurs pour stabiliser le signal. 
 
-| ![][image14] |
+| ![](../Images/FirstVersion.png) |
 | :---: |
-| **Figure 9 :** Première version du circuit |
+| **Figure 10 :** Première version du circuit |
 
 Après avoir testé cette configuration de circuit sur un «breadboard», deux changements ont été effectués. Tout d’abord, nous avons réalisé que nous pouvions tout simplement alimenter les capteurs avec le 5V du Arduino Nano directement au lieu d’utiliser un régulateur de tension, ce qui simplifie le circuit et diminue le nombre de composantes nécessaires. De plus, nous avons constaté que l’impédance d’entrée du Opta était trop faible, ce qui nous empêchait de lire les bonnes valeurs des thermomètres de fluide. Nous avons alors décidé d’ajouter un amplificateur opérationnel au circuit afin d’améliorer la lecture. Des condensateurs polarisés de 1μF ont également été ajoutés entre les thermomètres de fluide et leur résistance afin de stabiliser davantage le signal obtenu.
 
@@ -199,11 +204,9 @@ Après avoir testé cette configuration de circuit sur un «breadboard», deux c
 
 La deuxième version du circuit est présentée à la figure 10 suivante.
 
-![][image15]
-
-![][image16]
-
-**Figure 10 :** Deuxième version du circuit
+|![](../Images/SecondVersion1.png) ![](../Images/SecondVersion2.png)|
+| :---: |
+|**Figure 11 :** Deuxième version du circuit|
 
 Les changements apportés à la première version du circuit ont été expliqués dans la section 3.1.2 (ajout d’un ampli op et utilisation d’un Arduino Nano). Toutefois, après avoir discuté avec le client, celui-ci nous a indiqué qu’il serait plus approprié de ne pas utiliser un Arduino Nano pour lire les données du capteur de température et d’humidité afin d’alléger le circuit et d’offrir un produit d’allure plus professionnel. Ainsi, puisque l’Arduino Opta ne peut pas lire les données du capteur (bus I2C), l’équipe a acquis un nouveau capteur fonctionnant par modbus (SenseCap S-TH-01 de Seeed Studio). L’Arduino Nano n’était donc plus nécessaire. Toutefois, puisque celui-ci permettait d’alimenter les thermomètres à fluide avec du 5V, un diviseur de tension a dû être ajouté afin de transformer le 12V du «power supply» en 5V. De plus, afin de lire les données du débitmètre, le client a suggéré l’achat d’une extension Arduino (AFX00007) permettant de lire des variations de courant de 4-20 mA, soit ce qui est fourni par le débitmètre de l’UNF. Finalement, les condensateurs connectés aux thermomètres à fluide ont été retirés, puisque nous avons réalisé qu’ils ne changeaient rien. Toutes ces modifications sont présentées dans la section 2 du présent document (Design retenu).
 
@@ -213,9 +216,9 @@ Les changements apportés à la première version du circuit ont été expliqué
 
 La première option considérée pour la production de l’interface Web qui contient l’écran d’affichage des graphiques  les statuts d’alertes et les suivis des interventions passées est de produire une page en code HTML qui à partir d’une requête HTTP affiche les données recueillies. Les données doivent donc être stockées en attendant d’être recueillies et affichées par la page dans un format qui n’a pas été déterminé. Dans ce design, la gestion des accès des fichiers est importante, car il est nécessaire que la page web ne tente pas d’accéder aux données en même temps que l’Arduino est en train de les écrire. Un squelette HTML est construit qui ressemble à la figure suivante : 
 
-![][image17]
-
-**Figure 11 :** Squelette de la page HTML
+|![](../Images/OldInterface.png)|
+| :---: |
+|**Figure 12 :** Squelette de la page HTML|
 
 Ce design n’a pas été retenu pour les raisons suivantes : 
 
@@ -239,349 +242,7 @@ Ci-dessous se trouve un tableau contenant les différentes itérations de désig
 | :---- | :---- | :---- | :---- |
 | D1 | Design préliminaire fin automne, arduino opta recueille température de l’eau dans le chiller, la température et l’humidité de la salle IRM envoyés par l’arduino Nano, et envoie les données au serveur via push gateway pour l’affichage sur l’interface Grafana. | Section 2 |  |
 
-# **ANNEXES** {#annexes}
 
-## **Annexe A : Code du Arduino Nano non retenu** {#annexe-a-:-code-du-arduino-nano-non-retenu}
-
-![][image18]
-
-![][image19]
-
-## **Annexe B : Code du Arduino Opta** {#annexe-b-:-code-du-arduino-opta}
-
-\#include \<OptaBlue.h\>     // Librairie utilisée pour la lecture du débit.
-
-\#include \<Ethernet.h\>     // Pour établir la connexion à l'aide d'Ethernet de l'arduino.
-
-\#include \<HttpClient.h\>   // Pour envoyer les données HTTP de l'arduino vers le serveur.
-
-\#include \<ArduinoModbus.h\>// Librairie qui permet d'utiliser le port Modbus de l'arduino avec le thermomètre humidité-temperature.
-
-\#include \<ArduinoRS485.h\> // Librairie pour l'utilisation du standard RS-485 avec le themomètre humidité-temperature.
-
-//Liste de constantes nécessaires aux calculs
-
-float TEMPERATURE\_REFERENCE \= 50 \+ 273.15; // Température de référence (K)
-
-int RESISTANCE\_REFERENCE \= 988.1; // Résistance de référence à 50°C (ohms)
-
-int BETA \= 4100; // Constante beta (K)
-
-int RESISTANCE\_SERIE \= 2985; // Résistance en série avec le thermomètre (ohms)
-
-//Constantes pour la communication avec le Modbus par RS-485
-
-constexpr auto BAUDRATE \= 9600; // Débit de comminucation établie à 9600 bits/seconde.
-
-constexpr auto BITDURATION \= 1\.f / BAUDRATE; // Durée d'un seul bit.
-
-constexpr auto WORD\_LENGTH \= 10.0f; // Établissement de la longueur d'un seul mot en nombre de bits.
-
-// Calcul du délai antérieur et postérieur en microsecondes pour une transmission RS-485 stable
-
-constexpr auto preDelayBR \= BITDURATION \* WORD\_LENGTH \* 3.5f \* 1e6; // Ici il s'agit du calcul du pré-délai avant la transmission.
-
-constexpr auto postDelayBR \= BITDURATION \* WORD\_LENGTH \* 3.5f \* 1e6 / 2.0; // Ici il s'agit du calcul du post-délai après la transmission.
-
-//Liste de variables utilisées dans les calculs de températures.
-
-float division\_thermometre1, division2, lecture\_entree, lecture\_sortie;
-
-float temp\_entree, temp\_sortie, temp\_irm, hum\_irm;
-
-float voltage\_thermistor1, voltage\_thermistor2;
-
-float resistance\_thermistor1, resistance\_thermistor2;
-
-float flow;
-
-using namespace Opta; // Nous permet d'éviter les préfixes pour les appels de fonctions.
-
-//Constantes requises au bon fonctionnement de l'envoi de données.
-
-String url \="/metrics/job/temperature";
-
-int serverPort \= 9091;  // Port du Prometheus Pushgateway.
-
-byte mac\[\] \= { 0xA8, 0x61, 0x0A, 0x50, 0x5A, 0xE7 }; // Adresse MAC assigné à l'arduino.
-
-IPAddress server(10, 200, 38, 184); // Adresse IP du serveur qui reçoit les données.
-
-//Création des objets pour la connexion.
-
-EthernetClient ethernetClient; // Création d'un objet de type EthernetClient pour établir une connexion réseau.
-
-HttpClient client(ethernetClient); // Création d'un objet nommé client pour envoyer des requêtes HTTP à partir de la conexion établie par ethernetClient.
-
-// Définition du canal 0 pour la lecture du débit
-
-\#define CANAL 0
-
-//Fonctions utile tout le long du code.
-
-// Fonction pour le calcul de la résistance selon la lecture d'une PINS utilisé pour les thermomètres de l'eau.
-
-float calcultemperature (float lecture\_pin) {
-
-  float voltage= (5/1935.00) \* lecture\_pin; //Lecture  sur 5V
-
-  float resistance \= (voltage \* RESISTANCE\_SERIE) / (5.0 \- voltage); //Calcul de la résistance par diviseur de tension.
-
-  float division \= log(resistance/RESISTANCE\_REFERENCE); // calcul de division pour suivre la courbe du thermomètre.
-
-  float temp \= (1 / ((division/BETA)+(1/TEMPERATURE\_REFERENCE))) \- 273.15; // Calcul de la température.
-
-  return temp;
-
-}
-
-//Fonction pour lire la température et l'humidité avec le Modbus.
-
-float ReadRS485(int addr, int reg) {
-
-  int w1 \= 0;
-
-  if (\!ModbusRTUClient.requestFrom(addr, HOLDING\_REGISTERS, reg, 1)) {
-
-    Serial.println("Erreur lecture Modbus");
-
-    Serial.println(ModbusRTUClient.lastError());
-
-  } else {
-
-    w1 \= ModbusRTUClient.read();
-
-  }
-
-  return w1;
-
-}
-
-float CurrentRead(){
-
-    // Lecture du courant sur le canal CANAL
-
-  AnalogExpansion exp \= OptaController.getExpansion(0); // On suppose que l'extension est sur l'index 0
-
-  if (exp) {
-
-    float current\_mA \= exp.pinCurrent(CANAL);
-
-    return current\_mA;
-
-  }
-
-}
-
-//Fonction qui transforme le courant mesuré en débit avant de l'envoyer à l'interface.
-
-float FlowCalcul(float current){
-
-  float min \= 0 ; // Débit minimal (4mA) configuré dans le module Q9 Display a modifier au besoin en litre/min les unités sont arbitraires.
-
-  float max \= 100 ; // Débit maximal(20mA) configuré dans le module Q9 Display a modifier au besoin en litre/min les unités sont arbitraires.
-
-  float debit \= (current \- 4) \* (max \- min) / (20 \- 4) \+ 0;
-
-  return debit ;
-
-}
-
-void setup() {
-
-  //Initiation des PINS d'entrées et de sorties.
-
-  pinMode(LED\_D0, OUTPUT); //Sortie LED directement intégrée au opta nous signal son bon fonctionnement.
-
-  digitalWrite(LED\_D0, HIGH); //Nous allumons cette même LED.
-
-  pinMode(A2, INPUT); // PIN identifiée comme étant I3 sur l'Arduino, sert à receuillir les données de l'eau d'entrée.
-
-  pinMode(A3, INPUT); // PIN identifiée comme étant I4 sur l'Arduino, sert à receuillir les données de l'eau de sortie.
-
-  // Manque les pins pour le débimètre.
-
-  Serial.begin(BAUDRATE); // On initialise la connexion par le port USB pour permettre la connexion à un ordinateur en cas de problème.
-
-  analogReadResolution(12); // On augmente la résolution de lecture de l'arduino pour la mettre sur 12 bits.
-
-  // Initialisation de l'Ethernet
-
-  if (Ethernet.begin(mac) \== 0) { // On lance la connexion et on vérifie si nous avons réussi à avoir une adresse IP de DHCP.
-
-    Serial.println("Échec de la configuration Ethernet avec DHCP"); //On imprimme un message d'erreur dans le serial print.
-
-    while (true);  // Bloque le programme si l'Ethernet échoue.
-
-  }
-
-  delay(2000); // Ajout d'un délai pour s'assurer que la connexion est bien établie.
-
-  Serial.print("Connecté à Ethernet, adresse IP : "); // On imprimme l'adresse IP dans le terminal de l'ordinateur (Une seule fois à l'initialisation).
-
-  Serial.println(Ethernet.localIP());
-
-//Validation de la connection au serveur. On imprimme dans le terminal.
-
-  if (\!client.connect(server, serverPort)) {
-
-    Serial.println(" Échec de connexion au serveur \!");
-
-} else {
-
-    Serial.println(" Connexion réussie \!");
-
-}
-
-// Initialisation de la communication RS485 pour le Modbus donc le thermomètre humidité-température.
-
-  RS485.setDelays(preDelayBR, postDelayBR);
-
-  if (\!ModbusRTUClient.begin(BAUDRATE, SERIAL\_8N2)) { // On indique le nombre de bits d'information (8), le nombre de bits de parité (0 donc N) et le nombre de bits de stop (2).
-
-    Serial.println("Erreur Modbus");
-
-    while (true);
-
-  }
-
-  OptaController.begin(); // On active le protocole du contrôleur du opta
-
-  // Initialisation du canal CANAL sur l'extension 0
-
-  AnalogExpansion::beginChannelAsAdc(OptaController, 0, CANAL, OA\_CURRENT\_ADC, false, false, false, 0);
-
-}
-
-void loop() {
-
-  digitalWrite(LED\_D2, HIGH); //Nous permet de voir si le code entre bien dans la boucle en allumant une LED.
-
-  //Lecture des thermistors puis calculs de la température
-
-  lecture\_sortie=analogRead(A3);
-
-  lecture\_entree \=analogRead(A2);
-
-  temp\_entree \= calcultemperature(lecture\_entree);
-
-  temp\_sortie \= calcultemperature(lecture\_sortie);
-
-  //Lecture de la température et de l'humidité de la salle IRM
-
-  //Requête de données à l'adresse 0x01 (par défault) dans le registre 0x00 (température) et 0x01 (humidité)
-
-  temp\_irm \= ReadRS485(0x01, 0x00)/100;
-
-  hum\_irm \= ReadRS485(0x01, 0x01)/100;
-
-  OptaController.update(); // Mise à jour du controleur opta.
-
-  float courant=CurrentRead(); // Fonction pour la lecture du débit.
-
-  flow \= FlowCalcul(courant);
-
-  // Affichage des données dans le serial print afin de détecter les erreurs.
-
-  Serial.print("Température Entrée (°C): ");
-
-  Serial.println(temp\_entree);
-
-  Serial.print("Température Sortie (°C): ");
-
-  Serial.println(temp\_sortie);
-
-  Serial.print("Température Salle IRM (°C): ");
-
-  Serial.println(temp\_irm);
-
-  Serial.print("Humidité Salle IRM (%): ");
-
-  Serial.println(hum\_irm);
-
-  Serial.println("Courant mesuré : " \+ String(courant) \+ " mA");
-
-  Serial.print("débit (L/min): ");// Unité de débit à modifier au besoin.
-
-  Serial.println(flow);
-
-  // Préparation des données à envoyer
-
-  String postData \= "\# HELP temperature\_input Temperature in Celsius at input\\n";
-
-  postData \+= "\# TYPE temperature\_input gauge\\n";
-
-  postData \+= "temperature\_input{label1=\\"temp1\\", location=\\"entry\\"} " \+ String(temp\_entree);  // Température à l'entrée
-
-  postData \+= "\\n";
-
-  postData \+= "\# HELP temperature\_output Temperature in Celsius at output\\n";
-
-  postData \+= "\# TYPE temperature\_output gauge\\n";
-
-  postData \+= "temperature\_output{label2=\\"temp2\\", location=\\"exit\\"} " \+ String(temp\_sortie);  // Température à la sortie
-
-  postData \+= "\\n";
-
-  postData \+= "\# HELP temperature\_IRM Temperature IRM in Celsius\\n";
-
-  postData \+= "\# TYPE temperature\_IRM gauge\\n";
-
-  postData \+= "temperature\_IRM{label3=\\"tempIRM\\", unit=\\"Celsius\\"} " \+ String(temp\_irm);  // Température IRM
-
-  postData \+= "\\n";
-
-  postData \+= "\# HELP humidity\_IRM Humidity IRM in percentage\\n";
-
-  postData \+= "\# TYPE humidity\_IRM gauge\\n";
-
-  postData \+= "humidity\_IRM{label4=\\"humIRM\\", unit=\\"percent\\"} " \+ String(hum\_irm);  // Humidité IRM
-
-  postData \+= "\\n";
-
-  postData \+= "\# HELP flow water flow in liters/min \\n";
-
-  postData \+= "\# TYPE flow gauge\\n";
-
-  postData \+= "flow{label4=\\"flow\\"} " \+ String(flow);  // Humidité IRM
-
-  postData \+= "\\n";
-
-  // On convertie l'adresse IP pour l'obtenir en chaine de caractères.
-
-  char serverStr\[16\];
-
-  sprintf(serverStr, "%d.%d.%d.%d", server\[0\], server\[1\], server\[2\], server\[3\]);
-
-  // Envoi des données via HttpClient
-
-  Serial.println("Envoi des données au serveur...");
-
-  client.beginRequest();
-
-  client.put(serverStr, serverPort, url.c\_str());  
-
-  client.sendHeader("Content-Type", "text/plain");
-
-  client.sendHeader("Content-Length", postData.length());
-
-  client.print(postData);
-
-  client.endRequest();
-
-  // Lire la réponse du serveur à chaque envoie de données
-
-  int statusCode \= client.responseStatusCode();
-
-  Serial.print("Code réponse: ");
-
-  Serial.println(statusCode);
-
-  client.stop();
-
-  delay(5000); // Pause avant la prochaine envoi
-
-}
 
 **HISTORIQUE DES VERSIONS**
 
@@ -593,6 +254,7 @@ void loop() {
 | 0.4 | 25 novembre 2024 | Ajout de la partie sur le code Arduino | Héloïse |
 | 0.5 | 31 mars 2025 | Mise à jour du document suite aux modifications et évolutions du projet | Charlotte  |
 | 0.6 | 9 avril 2025 | Ajout de la section “Boîtier de rangement”  | Louis-Antoine |
+| 0.7 | 11 avril 2025 | Correction du fonctionnement des capteurs de température et d’humidité pour la salle IRM | Louis-Antoine |
 
 [image1]: <data:image/png;base64,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>
 
