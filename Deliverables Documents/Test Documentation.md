@@ -696,7 +696,7 @@ Les entrées directes du Grafana sont les données envoyées par Prometheus. Cel
 
    La *Figure 3.1* illustre le tableau de bord attendu de l’interface Grafana, incluant les données et l’historique : 
 
-| ![][image6] |
+| ![](../Images/Dashboard.png) |
 | ----- |
 | **Figure 3.1 :** Modèle du tableau de bord Grafana  |
 
